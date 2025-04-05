@@ -9,3 +9,9 @@ COPY . .
 
 # Ensure Python dependencies are installed (if any are added by students)
 RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
+
+# Expose the port for SSE communication
+EXPOSE 8000
+
+# Run the server with SSE transport
+CMD ["python", "quack.py", "--sse", "--port=8000"]

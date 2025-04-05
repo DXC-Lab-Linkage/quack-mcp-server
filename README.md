@@ -25,6 +25,7 @@ pip install -r requirements.txt
 ```
 
 The Quack server requires the following dependencies:
+
 ```
 mcp[cli]
 pylint
@@ -37,7 +38,7 @@ pytest-asyncio
 
 ### Starting the Server
 
-To start the Quack server:
+To start the Quack server with stdio transport (default):
 
 ```bash
 python3 quack.py
@@ -49,11 +50,35 @@ For debug logging:
 python3 quack.py --debug
 ```
 
+To start the server with SSE (Server-Sent Events) transport for HTTP communication:
+
+```bash
+python3 quack.py --sse --host=0.0.0.0 --port=8000
+```
+
 Alternatively, you can use the provided shell script:
 
 ```bash
+# For stdio transport (default)
 ./run_quack.sh
+
+# For SSE transport
+./run_quack.sh --sse --host=0.0.0.0 --port=8000
 ```
+
+### Docker Container
+
+The Quack server can be run in a Docker container, which automatically uses SSE transport:
+
+```bash
+# Build the Docker image
+docker build -t quack-mcp-server .
+
+# Run the container, exposing port 8000
+docker run -p 8000:8000 quack-mcp-server
+```
+
+When running in a Docker container, the server automatically starts in SSE mode on port 8000.
 
 ### Using the MCP Tools
 
@@ -89,6 +114,7 @@ tests/
 ```
 
 When implementing a new processor (e.g., a test coverage processor):
+
 1. Create your processor in `quack/processors/`
 2. Add tests for your processor in `tests/processors/`
 3. Use code in `tests/examples/` to test what your processor analyzes
@@ -132,6 +158,7 @@ python -m pytest tests/ -x --asyncio-mode=auto
 Many of the tests automatically start and stop the Quack server as needed, so you don't need to manually manage the server process during testing. This is handled by pytest fixtures in the `conftest.py` file.
 
 The server tests in `tests/server/test_server_auto.py` demonstrate how to automatically start and stop the server for testing. These tests verify that:
+
 1. The server starts up correctly
 2. The server can process jobs
 3. The server shuts down properly
@@ -145,11 +172,13 @@ Quack can be integrated with Cline to provide code analysis capabilities directl
 1. Configure Cline MCP Settings
 
    The Quack server can be configured in Cline's MCP settings file at:
+
    ```
    ~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json
    ```
 
-   With the following configuration:
+   #### For Local Stdio Mode (Default)
+
    ```json
    {
      "mcpServers": {
@@ -164,17 +193,37 @@ Quack can be integrated with Cline to provide code analysis capabilities directl
    }
    ```
 
+   #### For Docker Container with SSE
+
+   When running the server in a Docker container, configure Cline to connect via HTTP/SSE:
+
+   ```json
+   {
+     "mcpServers": {
+       "quack": {
+         "url": "http://localhost:8000/sse",
+         "disabled": false,
+         "autoApprove": []
+       }
+     }
+   }
+   ```
+
+   Note: Replace `localhost:8000` with the appropriate host and port if you've mapped the Docker container to a different port.
+
 ### Using Quack with Cline
 
 Once configured, you can use Cline to analyze Python code using the Quack server. Here are some example prompts:
 
 - **Analyze code for linting issues**:
+
   ```
   Analyze this Python code for linting issues:
   [paste your code here]
   ```
 
 - **Check code for type errors**:
+
   ```
   Check this Python code for type errors:
   [paste your code here]
@@ -222,9 +271,34 @@ result = add("5", 10)  # Type error: str + int
 If Cline doesn't seem to be using the Quack server:
 
 1. Make sure the Quack server is properly configured in the MCP settings file
-2. Check that the path to the quack.py file is correct
-3. Ensure all dependencies are installed
-4. Restart VSCode to reload the MCP settings
+2. Check that the path to the quack.py file is correct (for stdio mode)
+3. Verify the URL is correct and the server is running (for SSE mode)
+4. Ensure all dependencies are installed
+5. Restart VSCode to reload the MCP settings
+
+#### Docker-Specific Issues
+
+When running in Docker:
+
+1. **Port Mapping**: Ensure the container's port 8000 is properly mapped to a host port:
+
+   ```bash
+   docker run -p 8000:8000 quack-mcp-server
+   ```
+
+2. **Network Access**: If running Docker in a complex network environment, make sure the host can access the container's port.
+
+3. **Container Logs**: Check the container logs for any startup issues:
+
+   ```bash
+   docker logs <container_id>
+   ```
+
+4. **Testing the Connection**: You can test if the SSE endpoint is accessible:
+   ```bash
+   curl http://localhost:8000
+   ```
+   This should return a 404 response (since there's no root endpoint), but confirms the server is running.
 
 ## Architecture
 
@@ -263,7 +337,3 @@ python3 quack.py --debug
 ```
 
 Logs are written to both the console and `logs/quack.log`.
-
-## License
-
-[MIT License](LICENSE)

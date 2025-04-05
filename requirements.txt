@@ -3,3 +3,4 @@ pylint
 mypy
 pytest
 pytest-asyncio
+uvicorn

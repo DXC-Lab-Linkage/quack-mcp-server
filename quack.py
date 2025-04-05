@@ -39,6 +39,9 @@ def main():
     """Main entry point for the Quack server"""
     parser = argparse.ArgumentParser(description="Quack - Python code analysis MCP server")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--sse", action="store_true", help="Run with SSE transport")
+    parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)")
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind (default: 8000)")
     args = parser.parse_args()
     
     # Set debug logging if requested
@@ -46,11 +49,15 @@ def main():
         logger.setLevel(logging.DEBUG)
         logger.debug("Debug logging enabled")
     
-    logger.info("[Server] Starting Quack MCP server")
-    
     try:
-        # Use the module-level server
-        server.run()
+        if args.sse:
+            # Import uvicorn only when needed
+            import uvicorn
+            logger.info(f"[Server] Starting Quack MCP server with SSE transport on {args.host}:{args.port}")
+            uvicorn.run(server.sse_app(), host=args.host, port=args.port)
+        else:
+            logger.info("[Server] Starting Quack MCP server with stdio transport")
+            server.run()
     except Exception as e:
         logger.critical(f"[Server] Fatal error: {str(e)}", exc_info=True)
         sys.exit(1)

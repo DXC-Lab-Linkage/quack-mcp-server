@@ -1,5 +1,5 @@
-# Use the prebuilt cs5740-base image
-FROM container.cs.vt.edu/steve72/cs5740-base:latest
+# Use the prebuilt cs5740-quack-base image
+FROM container.cs.vt.edu/steve72/cs5740-quack-base:latest
 
 # Set working directory inside the container
 WORKDIR /app

@@ -8,12 +8,15 @@ This file contains intentional issues for testing linting and static analysis.
 unused_var = 42  # Unused variable
 x = 10  # Single-letter variable name
 
+
 # Type issues
 def add(a: int, b: int) -> int:
     return a + b
 
+
 def greet(name: str) -> str:
     return "Hello, " + name
+
 
 # Function with both linting and type issues
 def calculate_average(numbers):  # Missing type annotations
@@ -22,6 +25,7 @@ def calculate_average(numbers):  # Missing type annotations
         total += num
     unused_result = total * 2  # Unused variable
     return total / len(numbers)
+
 
 # Call with wrong type
 result = add("5", 10)  # Type error: str + int

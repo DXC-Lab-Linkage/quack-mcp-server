@@ -3,9 +3,7 @@ Pytest configuration for Quack tests.
 """
 
 import pytest
-import asyncio
 import sys
-import os
 from pathlib import Path
 
 # Add parent directory to path to import quack module
@@ -26,6 +24,7 @@ JobFactory.register_processor(JobType.STATIC_ANALYSIS, StaticAnalysisJobProcesso
 pytest_plugins = ["pytest_asyncio"]
 
 # Use pytest-asyncio's built-in event_loop fixture
+
 
 @pytest.fixture(scope="session")
 def job_manager():

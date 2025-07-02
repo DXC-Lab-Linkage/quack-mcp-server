@@ -7,6 +7,8 @@ import json
 import logging
 import tempfile
 import os
+import subprocess
+import sys
 import time
 from typing import Dict, Any, List
 
@@ -15,6 +17,55 @@ from ..jobs.base import JobProcessor, BasedPyrightJob
 from ..utils.diagnostics import filter_and_output_json
 
 logger = logging.getLogger("quack")
+
+
+def is_basedpyright_installed():
+    """Check if basedpyright is installed and available."""
+    try:
+        subprocess.run(
+            ["basedpyright", "--version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
+def install_basedpyright():
+    """Install basedpyright using pip."""
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "basedpyright"], check=True
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to install basedpyright: {e}")
+        raise
+
+
+def log_config_detection(verbose=False):
+    """Log configuration file detection for basedpyright in verbose mode."""
+    if not verbose:
+        return
+        
+    # Get project root - go up from quack/processors/ to project root
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    
+    # Determine which config file takes precedence
+    pyright_config = os.path.join(project_root, "pyrightconfig.json")
+    pyproject_toml = os.path.join(project_root, "pyproject.toml")
+
+    config_used = None
+    if os.path.isfile(pyright_config):
+        config_used = pyright_config
+    elif os.path.isfile(pyproject_toml):
+        config_used = pyproject_toml
+    else:
+        logger.debug("No configuration file found. Using default settings.")
+
+    if config_used:
+        logger.debug(f"Using configuration from: {config_used}")
 
 
 class BasedPyrightJobProcessor(JobProcessor):
@@ -40,6 +91,22 @@ class BasedPyrightJobProcessor(JobProcessor):
         job.status = JobStatus.RUNNING
         job.started_at = time.time()
         logger.info(f"[{job.job_type.value}:{job.id}] Starting basedpyright analysis")
+
+        # Ensure basedpyright is installed
+        if not is_basedpyright_installed():
+            logger.info(f"[{job.job_type.value}:{job.id}] basedpyright not found. Installing...")
+            try:
+                install_basedpyright()
+            except Exception as e:
+                logger.error(f"[{job.job_type.value}:{job.id}] Failed to install basedpyright: {e}")
+                job.status = JobStatus.FAILED
+                job.error = f"Failed to install basedpyright: {e}"
+                job.completed_at = time.time()
+                return
+
+        # Log configuration detection in verbose mode
+        verbose_mode = logger.isEnabledFor(logging.DEBUG)
+        log_config_detection(verbose_mode)
 
         temp_path = None
         try:

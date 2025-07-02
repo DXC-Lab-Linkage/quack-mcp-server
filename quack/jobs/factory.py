@@ -3,7 +3,7 @@ Factory for creating jobs and processors.
 """
 
 import uuid
-from typing import Dict
+from typing import Dict, Optional
 
 from .enums import JobType
 from .base import Job, JobProcessor, LintJob, StaticAnalysisJob, BasedPyrightJob
@@ -27,13 +27,15 @@ class JobFactory:
         cls.processors[job_type] = processor
 
     @classmethod
-    def create_job(cls, job_type: JobType, code: str) -> Job:
+    def create_job(cls, job_type: JobType, code: str, severity: str = "all", top_n: Optional[int] = None) -> Job:
         """
         Create a job of the specified type
 
         Args:
             job_type: Type of job to create
             code: Python code to analyze
+            severity: Severity filter for basedpyright jobs ("error", "warning", "info", or "all")
+            top_n: Maximum number of issues to return for basedpyright jobs
 
         Returns:
             A new job instance of the appropriate type
@@ -48,7 +50,7 @@ class JobFactory:
         elif job_type == JobType.STATIC_ANALYSIS:
             return StaticAnalysisJob(job_id, code)
         elif job_type == JobType.BASEDPYRIGHT:
-            return BasedPyrightJob(job_id, code)
+            return BasedPyrightJob(job_id, code, severity, top_n)
         else:
             raise ValueError(f"Unknown job type: {job_type}")
 

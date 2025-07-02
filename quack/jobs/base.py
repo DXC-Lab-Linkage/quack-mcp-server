@@ -123,8 +123,11 @@ class StaticAnalysisJob(Job):
 @dataclass
 class BasedPyrightJob(Job):
     """Job for basedpyright static type analysis"""
+    
+    severity: str = "all"
+    top_n: Optional[int] = None
 
-    def __init__(self, job_id: str, code: str):
+    def __init__(self, job_id: str, code: str, severity: str = "all", top_n: Optional[int] = None):
         super().__init__(
             id=job_id,
             status=JobStatus.PENDING,
@@ -132,3 +135,5 @@ class BasedPyrightJob(Job):
             job_type=JobType.BASEDPYRIGHT,
             submitted_at=float(__import__("time").time()),
         )
+        self.severity = severity
+        self.top_n = top_n

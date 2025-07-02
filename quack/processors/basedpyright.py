@@ -12,6 +12,7 @@ from typing import Dict, Any, List
 
 from ..jobs.enums import JobStatus
 from ..jobs.base import JobProcessor, BasedPyrightJob
+from ..utils.diagnostics import filter_and_output_json
 
 logger = logging.getLogger("quack")
 
@@ -102,21 +103,18 @@ class BasedPyrightJobProcessor(JobProcessor):
                     job.completed_at = time.time()
                     return
 
-                # Parse basedpyright JSON output
-                issues: List[Dict[str, Any]] = []
+                # Parse basedpyright JSON output and apply filtering
                 if basedpyright_output:
                     try:
                         # BasedPyright outputs JSON format
                         json_data = json.loads(basedpyright_output)
                         
-                        # Handle different JSON structures that basedpyright might return
-                        diagnostics = []
-                        if isinstance(json_data, dict):
-                            # BasedPyright uses "generalDiagnostics" key
-                            diagnostics = json_data.get("generalDiagnostics", json_data.get("diagnostics", []))
-                        elif isinstance(json_data, list):
-                            diagnostics = json_data
-
+                        # Use the utility function to filter and format diagnostics
+                        filtered_result = filter_and_output_json(json_data, job.severity, job.top_n)
+                        diagnostics = filtered_result.get("diagnostics", [])
+                        
+                        # Convert diagnostics to our format with line content
+                        issues: List[Dict[str, Any]] = []
                         for diagnostic in diagnostics:
                             if isinstance(diagnostic, dict):
                                 # Extract information from diagnostic
@@ -145,30 +143,57 @@ class BasedPyrightJobProcessor(JobProcessor):
                                     "rule": rule,
                                     "line_content": line_content,
                                 })
+                        
+                        # Create result with filtering metadata
+                        total_diagnostics = len(json_data.get("generalDiagnostics", []))
+                        job.result = {
+                            "status": "success",
+                            "summary": {
+                                "total_issue_count": total_diagnostics,
+                                "filtered_issue_count": len(issues),
+                                "severity_filter": job.severity,
+                                "top_n_limit": job.top_n
+                            },
+                            "issues": issues,
+                        }
                     except json.JSONDecodeError as e:
                         logger.warning(
                             f"[{job.job_type.value}:{job.id}] Failed to parse JSON output: {str(e)}"
                         )
                         # Fall back to treating output as plain text
-                        if basedpyright_output:
-                            issues.append({
+                        job.result = {
+                            "status": "success",
+                            "summary": {
+                                "total_issue_count": 1,
+                                "filtered_issue_count": 1,
+                                "severity_filter": job.severity,
+                                "top_n_limit": job.top_n
+                            },
+                            "issues": [{
                                 "line": 1,
                                 "column": 1,
                                 "message": f"Raw output: {basedpyright_output}",
                                 "severity": "error",
                                 "rule": None,
                                 "line_content": None,
-                            })
+                            }],
+                        }
+                else:
+                    # No output - create empty result
+                    job.result = {
+                        "status": "success",
+                        "summary": {
+                            "total_issue_count": 0,
+                            "filtered_issue_count": 0,
+                            "severity_filter": job.severity,
+                            "top_n_limit": job.top_n
+                        },
+                        "issues": [],
+                    }
 
-                # Create result
-                job.result = {
-                    "status": "success",
-                    "summary": {"issue_count": len(issues)},
-                    "issues": issues,
-                }
-
+                issue_count = job.result.get("summary", {}).get("filtered_issue_count", 0)
                 logger.info(
-                    f"[{job.job_type.value}:{job.id}] Analysis complete with {len(issues)} issues"
+                    f"[{job.job_type.value}:{job.id}] Analysis complete with {issue_count} issues"
                 )
                 job.status = JobStatus.COMPLETED
                 job.completed_at = time.time()

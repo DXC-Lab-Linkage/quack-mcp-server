@@ -37,13 +37,15 @@ class JobManager:
         )  # Limited history of completed jobs
         self.active_tasks: Dict[str, asyncio.Task] = {}  # job_id -> asyncio.Task
 
-    def submit_job(self, job_type: JobType, code: str) -> Job:
+    def submit_job(self, job_type: JobType, code: str, severity: str = "all", top_n: Optional[int] = None) -> Job:
         """
         Submit a new job for processing
 
         Args:
             job_type: Type of job to create
             code: Python code to analyze
+            severity: Severity filter for basedpyright jobs ("error", "warning", "info", or "all")
+            top_n: Maximum number of issues to return for basedpyright jobs
 
         Returns:
             The newly created job instance
@@ -54,7 +56,7 @@ class JobManager:
         from .factory import JobFactory
 
         # Create appropriate job type
-        job = JobFactory.create_job(job_type, code)
+        job = JobFactory.create_job(job_type, code, severity, top_n)
 
         # Store job
         self.jobs[job.id] = job

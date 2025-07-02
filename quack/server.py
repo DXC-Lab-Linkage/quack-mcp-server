@@ -132,19 +132,50 @@ def create_server() -> FastMCP:
 
     @mcp.tool()
     async def submit_code_for_basedpyright(
-        code: str, ctx: Context
+        code: str, ctx: Context, severity: str = "all", top_n: int = -1
     ) -> Dict[str, Any]:
         """
         Submit Python code for basedpyright static type analysis
 
         Args:
             code: Python code content to analyze
+            severity: Severity filter ("error", "warning", "info", or "all")
+            top_n: Maximum number of issues to return (-1 for all)
 
         Returns:
             Dictionary with job ID for checking results later
         """
-        # Reuse generic submit_code tool with "basedpyright" type
-        return await submit_code("basedpyright", code, ctx)
+        job_manager = ctx.request_context.lifespan_context["job_manager"]
+
+        # Validate severity parameter
+        valid_severities = ["error", "warning", "info", "all"]
+        if severity not in valid_severities:
+            logger.warning(f"[Server] Invalid severity: {severity}")
+            return {"status": "error", "message": f"Invalid severity. Must be one of: {valid_severities}"}
+
+        # Validate top_n parameter
+        if not isinstance(top_n, int) or top_n < -1 or top_n == 0:
+            logger.warning(f"[Server] Invalid top_n: {top_n}")
+            return {"status": "error", "message": "top_n must be a positive integer or -1 for all"}
+
+        # Convert -1 to None for internal use
+        top_n_internal = None if top_n == -1 else top_n
+
+        # Submit job with filtering parameters
+        job = job_manager.submit_job(JobType.BASEDPYRIGHT, code, severity, top_n_internal)
+
+        logger.info(
+            f"[{job.job_type.value}:{job.id}] Submitted new job ({len(code)} bytes, severity={severity}, top_n={top_n})"
+        )
+
+        return {
+            "status": "accepted",
+            "job_id": job.id,
+            "job_type": job.job_type.value,
+            "severity": severity,
+            "top_n": top_n,
+            "message": f"Code submitted for basedpyright analysis. Use get_job_results to check status.",
+        }
 
     # Get job results tool
     @mcp.tool()

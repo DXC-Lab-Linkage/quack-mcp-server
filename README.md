@@ -94,6 +94,81 @@ Quack exposes the following MCP tools:
 5. `get_job_results`: Get the results of a submitted job.
 6. `list_jobs`: List all jobs and their status.
 
+
+## Setting Up Quack with Cline/Claude Code
+
+Quack can be integrated with Cline to provide code analysis capabilities directly through the Cline interface.
+
+### Configuration Steps
+
+1. Configure Cline MCP Settings
+
+   The Quack server can be configured in Cline's MCP settings file at:
+
+   ```
+   ~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json
+   ```
+
+   #### For Local Stdio Mode (Default)
+
+   ```json
+   {
+     "mcpServers": {
+       "quack": {
+         "command": "path/to/your/uv",
+         "args": ["run","/path/to/your/quack.py"],
+         "env": {},
+         "disabled": false,
+         "autoApprove": []
+       }
+     }
+   }
+   ```
+
+   #### For Docker Container with Streamable Http
+
+   When running the server in a Docker container, configure Cline to connect via HTTP/SSE:
+
+   ```json
+   {
+     "mcpServers": {
+       "quack": {
+         "url": "http://localhost:8000/mcp",
+         "disabled": false,
+         "autoApprove": []
+       }
+     }
+   }
+   ```
+
+   Note: Replace `localhost:8000` with the appropriate host and port if you've mapped the Docker container to a different port.
+
+### Using Quack with Cline
+
+Once configured, you can use Cline to analyze Python code using the Quack server. Here are some example prompts:
+
+- **Analyze code for linting issues**:
+
+  ```
+  Analyze this Python code for linting issues:
+  [paste your code here]
+  ```
+
+- **Check code for type errors**:
+
+  ```
+  Check this Python code for type errors:
+  [paste your code here]
+  ```
+
+- **Get comprehensive feedback**:
+  ```
+  What's wrong with this Python function?
+  [paste your function here]
+  ```
+
+
+
 ## Testing Architecture
 
 Quack has two distinct testing concepts:
@@ -167,77 +242,7 @@ The server tests in `tests/server/test_server_auto.py` demonstrate how to automa
 2. The server can process jobs
 3. The server shuts down properly
 
-## Setting Up Quack with Cline
 
-Quack can be integrated with Cline to provide code analysis capabilities directly through the Cline interface.
-
-### Configuration Steps
-
-1. Configure Cline MCP Settings
-
-   The Quack server can be configured in Cline's MCP settings file at:
-
-   ```
-   ~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json
-   ```
-
-   #### For Local Stdio Mode (Default)
-
-   ```json
-   {
-     "mcpServers": {
-       "quack": {
-         "command": "path/to/your/uv",
-         "args": ["run","/path/to/your/quack.py"],
-         "env": {},
-         "disabled": false,
-         "autoApprove": []
-       }
-     }
-   }
-   ```
-
-   #### For Docker Container with Streamable Http
-
-   When running the server in a Docker container, configure Cline to connect via HTTP/SSE:
-
-   ```json
-   {
-     "mcpServers": {
-       "quack": {
-         "url": "http://localhost:8000/mcp",
-         "disabled": false,
-         "autoApprove": []
-       }
-     }
-   }
-   ```
-
-   Note: Replace `localhost:8000` with the appropriate host and port if you've mapped the Docker container to a different port.
-
-### Using Quack with Cline
-
-Once configured, you can use Cline to analyze Python code using the Quack server. Here are some example prompts:
-
-- **Analyze code for linting issues**:
-
-  ```
-  Analyze this Python code for linting issues:
-  [paste your code here]
-  ```
-
-- **Check code for type errors**:
-
-  ```
-  Check this Python code for type errors:
-  [paste your code here]
-  ```
-
-- **Get comprehensive feedback**:
-  ```
-  What's wrong with this Python function?
-  [paste your function here]
-  ```
 
 ### Sample Code for Testing
 

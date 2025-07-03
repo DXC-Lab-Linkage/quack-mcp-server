@@ -9,7 +9,17 @@ for Python code.
 import argparse
 import logging
 import os
+import signal
 import sys
+
+
+# Handle SIGINT (Ctrl+C) gracefully
+def signal_handler(sig, frame):
+    print("Shutting down server gracefully...")
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 # Configure logging
 logging.basicConfig(

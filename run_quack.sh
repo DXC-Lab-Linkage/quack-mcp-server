@@ -35,8 +35,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Run the Quack server with the specified mode
-if [[ $MODE == *"--sse"* ]]; then
-  echo "Starting Quack server with SSE transport on $HOST:$PORT"
+if [[ $MODE == *"--streamable-http"* ]]; then
+  echo "Starting Quack server with streamable HTTP transport on $HOST:$PORT"
   python "$SCRIPT_DIR/quack.py" $MODE --host="$HOST" --port="$PORT"
 else
   echo "Starting Quack server with stdio transport"

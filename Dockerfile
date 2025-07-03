@@ -14,4 +14,4 @@ RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.
 EXPOSE 8000
 
 # Run the server with SSE transport
-CMD ["python", "quack.py", "--sse", "--port=8000"]
+CMD ["python", "quack.py", "--streamable-http", "--port=8000"]

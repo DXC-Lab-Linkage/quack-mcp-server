@@ -14,14 +14,15 @@ Quack is a continuous integration server built as an MCP server that automates c
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/quack.git
+git clone https://github.com/ahmedmustahid/quack-mcp-server.git
 cd quack
 ```
 
 2. Install dependencies:
 
+First, install `uv` from [here](https://docs.astral.sh/uv/getting-started/installation/)
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 The Quack server requires the following dependencies:
@@ -30,6 +31,7 @@ The Quack server requires the following dependencies:
 mcp[cli]
 pylint
 mypy
+basedpyright
 pytest
 pytest-asyncio
 ```
@@ -41,19 +43,20 @@ pytest-asyncio
 To start the Quack server with stdio transport (default):
 
 ```bash
-python3 quack.py
+uv run quack.py
 ```
 
 For debug logging:
 
 ```bash
-python3 quack.py --debug
+uv run quack.py --debug
 ```
 
-To start the server with SSE (Server-Sent Events) transport for HTTP communication:
+To start the server with streamable HTTP transport:
 
 ```bash
-python3 quack.py --sse --host=0.0.0.0 --port=8000
+#default --host=0.0.0.0 --port=8000
+uv run quack.py --streamable-http
 ```
 
 Alternatively, you can use the provided shell script:
@@ -87,8 +90,9 @@ Quack exposes the following MCP tools:
 1. `submit_code`: Submit code for both linting and static analysis.
 2. `submit_code_for_linting`: Submit code for linting only.
 3. `submit_code_for_static_analysis`: Submit code for static analysis only.
-4. `get_job_results`: Get the results of a submitted job.
-5. `list_jobs`: List all jobs and their status.
+4. `submit_code_for_basedpyright`: Submit code for basedpyright analysis only.
+5. `get_job_results`: Get the results of a submitted job.
+6. `list_jobs`: List all jobs and their status.
 
 ## Testing Architecture
 
@@ -183,8 +187,8 @@ Quack can be integrated with Cline to provide code analysis capabilities directl
    {
      "mcpServers": {
        "quack": {
-         "command": "python3",
-         "args": ["/path/to/your/quack.py", "--debug"],
+         "command": "path/to/your/uv",
+         "args": ["run","/path/to/your/quack.py"],
          "env": {},
          "disabled": false,
          "autoApprove": []
@@ -193,7 +197,7 @@ Quack can be integrated with Cline to provide code analysis capabilities directl
    }
    ```
 
-   #### For Docker Container with SSE
+   #### For Docker Container with Streamable Http
 
    When running the server in a Docker container, configure Cline to connect via HTTP/SSE:
 
@@ -201,7 +205,7 @@ Quack can be integrated with Cline to provide code analysis capabilities directl
    {
      "mcpServers": {
        "quack": {
-         "url": "http://localhost:8000/sse",
+         "url": "http://localhost:8000/mcp",
          "disabled": false,
          "autoApprove": []
        }
@@ -294,7 +298,7 @@ When running in Docker:
    docker logs <container_id>
    ```
 
-4. **Testing the Connection**: You can test if the SSE endpoint is accessible:
+4. **Testing the Connection**: You can test if the Streamable http endpoint is accessible:
    ```bash
    curl http://localhost:8000
    ```
@@ -328,12 +332,5 @@ To add a new processor:
 3. Create tests in `tests/processors/test_coverage_processor.py`
 4. Test your processor with example code in `tests/examples/`
 
-### Debugging
-
-Run the server with the `--debug` flag to enable detailed logging:
-
-```bash
-python3 quack.py --debug
-```
 
 Logs are written to both the console and `logs/quack.log`.

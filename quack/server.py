@@ -12,9 +12,9 @@ from mcp.server.fastmcp import Context, FastMCP
 from .jobs.enums import JobStatus, JobType
 from .jobs.factory import JobFactory
 from .jobs.manager import JobManager
+from .processors.basedpyright import BasedPyrightJobProcessor
 from .processors.lint import LintJobProcessor
 from .processors.static_analysis import StaticAnalysisJobProcessor
-from .processors.basedpyright import BasedPyrightJobProcessor
 
 logger = logging.getLogger("quack")
 
@@ -57,7 +57,9 @@ def create_server() -> FastMCP:
     JobFactory.register_processor(
         JobType.STATIC_ANALYSIS, StaticAnalysisJobProcessor()
     )
-    JobFactory.register_processor(JobType.BASEDPYRIGHT, BasedPyrightJobProcessor())
+    JobFactory.register_processor(
+        JobType.BASEDPYRIGHT, BasedPyrightJobProcessor()
+    )
 
     # Generic job submission tool
     @mcp.tool()
@@ -151,18 +153,26 @@ def create_server() -> FastMCP:
         valid_severities = ["error", "warning", "info", "all"]
         if severity not in valid_severities:
             logger.warning(f"[Server] Invalid severity: {severity}")
-            return {"status": "error", "message": f"Invalid severity. Must be one of: {valid_severities}"}
+            return {
+                "status": "error",
+                "message": f"Invalid severity. Must be one of: {valid_severities}",
+            }
 
         # Validate top_n parameter
         if not isinstance(top_n, int) or top_n < -1 or top_n == 0:
             logger.warning(f"[Server] Invalid top_n: {top_n}")
-            return {"status": "error", "message": "top_n must be a positive integer or -1 for all"}
+            return {
+                "status": "error",
+                "message": "top_n must be a positive integer or -1 for all",
+            }
 
         # Convert -1 to None for internal use
         top_n_internal = None if top_n == -1 else top_n
 
         # Submit job with filtering parameters
-        job = job_manager.submit_job(JobType.BASEDPYRIGHT, code, severity, top_n_internal)
+        job = job_manager.submit_job(
+            JobType.BASEDPYRIGHT, code, severity, top_n_internal
+        )
 
         logger.info(
             f"[{job.job_type.value}:{job.id}] Submitted new job ({len(code)} bytes, severity={severity}, top_n={top_n})"
@@ -174,7 +184,7 @@ def create_server() -> FastMCP:
             "job_type": job.job_type.value,
             "severity": severity,
             "top_n": top_n,
-            "message": f"Code submitted for basedpyright analysis. Use get_job_results to check status.",
+            "message": "Code submitted for basedpyright analysis. Use get_job_results to check status.",
         }
 
     # Get job results tool

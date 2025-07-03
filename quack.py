@@ -6,10 +6,10 @@ This MCP server provides asynchronous linting and static analysis tools
 for Python code.
 """
 
+import argparse
 import logging
 import os
 import sys
-import argparse
 
 # Configure logging
 logging.basicConfig(
@@ -24,7 +24,9 @@ try:
     os.makedirs("logs", exist_ok=True)
     file_handler = logging.FileHandler("logs/quack.log")
     file_handler.setFormatter(
-        logging.Formatter("[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s")
+        logging.Formatter(
+            "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
+        )
     )
     logger.addHandler(file_handler)
 except (PermissionError, OSError):
@@ -43,8 +45,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Quack - Python code analysis MCP server"
     )
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-    parser.add_argument("--sse", action="store_true", help="Run with SSE transport")
+    parser.add_argument(
+        "--debug", action="store_true", help="Enable debug logging"
+    )
+    parser.add_argument(
+        "--streamable-http",
+        action="store_true",
+        help="Run with streamable-http transport",
+    )
     parser.add_argument(
         "--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)"
     )
@@ -59,16 +67,14 @@ def main():
         logger.debug("Debug logging enabled")
 
     try:
-        if args.sse:
-            # Import uvicorn only when needed
-            import uvicorn
-
-            logger.info(
-                f"[Server] Starting Quack MCP server with SSE transport on {args.host}:{args.port}"
-            )
-            uvicorn.run(server.sse_app(), host=args.host, port=args.port)
+        if args.streamable_http:
+            server.settings.host = args.host
+            server.settings.port = args.port
+            server.run(transport="streamable-http")
         else:
-            logger.info("[Server] Starting Quack MCP server with stdio transport")
+            logger.info(
+                "[Server] Starting Quack MCP server with stdio transport"
+            )
             server.run()
     except Exception as e:
         logger.critical(f"[Server] Fatal error: {str(e)}", exc_info=True)

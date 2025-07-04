@@ -65,13 +65,13 @@ Alternatively, you can use the provided shell script:
 # For stdio transport (default)
 ./run_quack.sh
 
-# For SSE transport
-./run_quack.sh --sse --host=0.0.0.0 --port=8000
+# For Streamable-http transport
+./run_quack.sh --streamable-http --host=0.0.0.0 --port=8000
 ```
 
 ### Docker Container
 
-The Quack server can be run in a Docker container, which automatically uses SSE transport:
+The Quack server can be run in a Docker container, which automatically uses Streamable-http transport:
 
 ```bash
 # Build the Docker image
@@ -81,7 +81,7 @@ docker build -t quack-mcp-server .
 docker run -p 8000:8000 quack-mcp-server
 ```
 
-When running in a Docker container, the server automatically starts in SSE mode on port 8000.
+When running in a Docker container, the server automatically starts in Streamable-http mode on port 8000.
 
 ### Using the MCP Tools
 
@@ -127,7 +127,7 @@ Quack can be integrated with Cline to provide code analysis capabilities directl
 
    #### For Docker Container with Streamable Http
 
-   When running the server in a Docker container, configure Cline to connect via HTTP/SSE:
+   When running the server in a Docker container, configure Cline to connect via Streamable-http:
 
    ```json
    {
@@ -289,7 +289,7 @@ If Cline doesn't seem to be using the Quack server:
 
 1. Make sure the Quack server is properly configured in the MCP settings file
 2. Check that the path to the quack.py file is correct (for stdio mode)
-3. Verify the URL is correct and the server is running (for SSE mode)
+3. Verify the URL is correct and the server is running (for Streamable-http mode)
 4. Ensure all dependencies are installed
 5. Restart VSCode to reload the MCP settings
 

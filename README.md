@@ -143,6 +143,11 @@ Quack can be integrated with Cline to provide code analysis capabilities directl
 
    Note: Replace `localhost:8000` with the appropriate host and port if you've mapped the Docker container to a different port.
 
+### Usage Sample Image
+
+Used with Zed Agent in Zed editor
+![Usage Sample Image](example.png)
+
 ### Using Quack with Cline
 
 Once configured, you can use Cline to analyze Python code using the Quack server. Here are some example prompts:

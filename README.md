@@ -145,7 +145,10 @@ Quack can be integrated with Cline to provide code analysis capabilities directl
 
 ### Usage Sample Image
 
-Used with Zed Agent in Zed editor
+Used with Zed Agent in Zed editor.
+Model used: Gemini 2.5 Flash
+
+
 ![Usage Sample Image](example.png)
 
 ### Using Quack with Cline
